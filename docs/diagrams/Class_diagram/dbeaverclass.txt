@@ -1,0 +1,24 @@
+Mivel maga az alkalmazás eléggé összetett (elég sok pluginból,packageből és ezáltal még több java fájlból áll), ezért úgy döntöttem, hogy csak egy package-nek csinálom meg az osztály diagramját, még pedig a core-nak, mivel az alkalmazás wikipédiája alapján az tűnt az egyik fő modulnak. A diagramot az Intellij IDE segítségével generáltam, megjelenítve az osztályok közötti kapcsolatokat, illetve az osztályok metódusait és a propertyket (property = adattag, ha van gettere).Az összes adattag megjelenítése nem lett volna jó ötlet, mivel a CoreMessages osztály elég sok adattagja van, és ez így elrontotta volna a diagram összképét. A konstruktorokat szintén nem ábrázoltam a diagramon, mivel többnyire egy külön metódus a felelős az objektum inicializálásáért. Az elkövetkezőkben megpróbálom leírni a osztályok főbb feladatait:
+
+CoreCommands - a főbb module parancsokat tartalmazza
+
+CoreFeatures -  a főbb featureket tartalmazza
+
+CoreMessages - az üzeneteket tartalmazza
+
+DBeaverActivator - ez class irányítja a plugin életciklusát, többek között betölti a CoreFeatures-t és a CoreMessages-t. Emellett itt találhatóak meg a az UI-t és Core-t leállító metódusok is.
+
+DBeaverPreferencesInitializer - DBeaver beállításainak inicializálása
+
+DBeaverCore - Ahogy a class neve is jelzi, ez a "magja" az alkalmazásnak, objektum létrehozása a singleton tervezési mintának megfelelő (getInstance(),createInstance(),initialize()), így mindig csak egy ilyen objektum létezik. A megvalósítás threadsafe(synchronized). Emellett tartalmazza az objektum megfelelő bezárásáról gondoskodó metódust, illetve különböző propertykhez tartozó gettereket is.
+
+DBeaverCoreAdapterFactory - A kódból (és névből) ítélve ez az adapter tervezési mintát valósítaná meg, de komment szerint még nincs teljesen kész. A class felhasználja mind a DBeaverCore és DBeaverUI class-t.
+
+DBeaverWorkspace - Wrapper osztály az Eclipse workspace számára
+
+DBeaverUI - Ez a package fő UI classja. A DBeaverCore-hoz hasonlóan ez is megvalósítja a Singleton tervezési mintát. Ez az osztály felel (a nevének megfelelően) a felhasználói felületen történő dolgokért (üzenetek,errorok megjelenítése, megerősítések stb).
+
+WorkbenchContextListener - több fajta Listener-t is implementál, így különböző aktivációkért és deaktivációkért, illetve a navigator és sql szerkesztő környezetének aktiválásáért felel. Az osztálynak van egy belső osztálya is, a CommandExecutionListener, melyből csak a postExecuteSuccess metódus van ténylegesen implementálva, mely a kód alapján a megadott azonosítójú feature (DBFeature) használatát/regisztrációját teszi lehetővé.
+
+Ezenkívül a package tartalmaz még egy CoreResources.properties fájlt is, ami a lokalizációért felel.
+
