@@ -1,7 +1,15 @@
+<img src="https://github.com/dbeaver/dbeaver/wiki/images/dbeaver-icon-64x64.png" align="right"/>
+
 # DBeaver
 A DBeaver egy ingyenes multi-platform adatbáziskezelő eszköz fejlesztőknek, SQL programozóknak, adatbázis adminisztrátoroknak és elemzőknek.
+A DBeaver számos adatbázist képes kezelni amelyek rendelkeznek JDBC driverrel. Ez manapság szinte bármelyik adatbázisra jellemző. Pl. MySQL/MariaDB, PostgreSQL, Greenplum, Oracle, DB2 LUW, Exasol, SQL Server, Sybase/SAP ASE, SQLite, Firebird, H2, HSQLDB, Derby, Teradata, Vertica, Netezza, Informix, stb.
+Az Enterprise Edition (EE) verzió támogatja a non-JDBC adatforrásokat is. Pl. Amozon DynamoDB, MongoDB, Cassandra, Redis, egyéb NoSQL adatbázisok, stb.
 
-Számos adatbázist képes kezelni amelyek rendelkeznek JDBC driverrel. Ez manapság szinte bármelyik adatbázisra jellemző. Az Enterprise Edition (EE) verzió támogatja a non-JDBC adatforrásokat is, pl. NoSQL adatbázisokat (Amozon DynamoDB, MongoDB, Cassandra, Redis).
+A DBeaver rendelkezik többek között:
+* Metaadat-, SQL- és rich data szerkesztővel
+* Egyed-kapcsolat diagram támogatással
+* Adat exportálás, importálás, migrálás támogatással
+* SQL script-et végrehajtó környezettel
 
 ## Csapattagok
 | Név    | GitLab fiók | h-s azonosító | e-mail cím |
