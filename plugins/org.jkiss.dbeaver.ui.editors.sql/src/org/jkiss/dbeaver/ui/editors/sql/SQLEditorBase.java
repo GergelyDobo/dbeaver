@@ -827,4 +827,14 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
         }
     }
 
+    protected class ShowSelectAllFromAction extends Action {
+    	private String text;
+    	ShowSelectAllFromAction() {
+    		super(SQLEditorMessages.action_SelectAllFrom_label);
+    	}  //$NON-NLS-1$
+
+	    public void run() {
+	        System.out.println("TODO");
+	    }
+    }
 }
