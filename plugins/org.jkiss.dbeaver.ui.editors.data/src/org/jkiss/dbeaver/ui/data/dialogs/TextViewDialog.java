@@ -19,6 +19,8 @@ package org.jkiss.dbeaver.ui.data.dialogs;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -70,6 +72,9 @@ public class TextViewDialog extends ValueViewDialog {
     private Control hexEditControl;
     private TabFolder editorContainer;
     private boolean dirty;
+    
+    private JsonParser parser;
+    private Gson gson;
 
     public TextViewDialog(IValueController valueController) {
         super(valueController);
@@ -153,7 +158,8 @@ public class TextViewDialog extends ValueViewDialog {
         }
         //json
         {
-        	boolean isJson = false;
+        	parser = new JsonParser();
+            gson = new GsonBuilder().setPrettyPrinting().create();
         	String value =  valueType.getTypeName().equals("varchar") ? (String) getValueController().getValue() : null;
         	int style = SWT.NONE;
             if (readOnly) {
@@ -189,12 +195,7 @@ public class TextViewDialog extends ValueViewDialog {
             });
             StyledTextUtils.fillDefaultStyledTextContextMenu(jsonEdit);
             
-              
-            
-            
             if (hexEditorService != null && value != null && value.contains("{") && value.contains("}")) {
-            	JsonParser parser = new JsonParser();
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 try {
                 	JsonElement element = parser.parse(value);
                     String jsonString = gson.toJson(element);
@@ -315,6 +316,15 @@ public class TextViewDialog extends ValueViewDialog {
         } else {
             if (isTextEditorActive()) {
                 rawValue = textEdit.getText();
+            }
+            else if(!isTextEditorActive() && isJsonEditorActive()) {
+                try {
+                	JsonElement element = parser.parse(jsonEdit.getText());
+                    rawValue = element.toString();
+                } catch(JsonSyntaxException e) {
+                    rawValue = jsonEdit.getText();
+                }
+                
             } else {
                 rawValue = getBinaryString();
             }
@@ -347,6 +357,13 @@ public class TextViewDialog extends ValueViewDialog {
     private boolean isTextEditorActive()
     {
         return editorContainer == null || editorContainer.getSelectionIndex() == 0;
+    }
+    
+    private boolean isJsonEditorActive() {
+        if (editorContainer.getItemCount() > 2 && editorContainer.getSelectionIndex() == 1) {
+        	return true;
+        }
+        return false;
     }
 
     private void updateValueLength()
