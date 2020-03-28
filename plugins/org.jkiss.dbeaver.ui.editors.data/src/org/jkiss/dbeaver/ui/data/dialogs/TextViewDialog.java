@@ -17,6 +17,7 @@
 package org.jkiss.dbeaver.ui.data.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.KeyEvent;
@@ -194,6 +195,26 @@ public class TextViewDialog extends ValueViewDialog {
                 updateValueLength();
             });
             StyledTextUtils.fillDefaultStyledTextContextMenu(jsonEdit);
+            jsonEdit.addKeyListener(new KeyListener() {
+				
+				@Override
+				public void keyReleased(KeyEvent event) {
+					if (event.keyCode == 'f' && (event.stateMask & SWT.CTRL) != 0 && (event.stateMask & SWT.SHIFT)!= 0 ) {
+						try{
+							String jsonString = gson.toJson(parser.parse(jsonEdit.getText()));
+							jsonEdit.setText(jsonString);
+						} catch (JsonSyntaxException e) {
+							MessageDialog.openWarning(getShell(), "Warning", "Invalid JSON String, cannot be indented");
+							
+						}	
+					}					
+				}
+				
+				@Override
+				public void keyPressed(KeyEvent e) {					
+				}
+			});
+            
             
             if (hexEditorService != null && value != null && value.contains("{") && value.contains("}")) {
                 try {
@@ -205,7 +226,7 @@ public class TextViewDialog extends ValueViewDialog {
                     item.setControl(jsonEdit);
                     jsonEdit.setText(jsonString);
                 } catch (JsonSyntaxException e) {
-                	//TODO
+                	
                 }
                 
             }
@@ -424,6 +445,15 @@ public class TextViewDialog extends ValueViewDialog {
             ContentEditor editor = ContentEditor.openEditor(getValueController());
             cancelPressed();
             return;
+        }else if (buttonId == 0 && isJsonEditorActive()) {
+        	try {
+        		parser.parse(jsonEdit.getText());
+        	} catch(JsonSyntaxException e ) {
+        		boolean ok = MessageDialog.openConfirm(getShell(), "Save", "The JSON String is invalid. Are you sure?");
+            	if(!ok) {
+            		return;
+            	}
+        	}
         }
         super.buttonPressed(buttonId);
     }
