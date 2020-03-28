@@ -499,6 +499,7 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
         action.setActionDefinitionId(BaseTextEditorCommands.CMD_CONTENT_FORMAT);
         setAction(SQLEditorContributor.ACTION_CONTENT_FORMAT_PROPOSAL, action);
 
+        setAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM, new ShowSelectAllFromAction());
         setAction(ITextEditorActionConstants.CONTEXT_PREFERENCES, new ShowPreferencesAction());
 /*
         // Add the task action to the Edit pulldown menu (bookmark action is  'free')
