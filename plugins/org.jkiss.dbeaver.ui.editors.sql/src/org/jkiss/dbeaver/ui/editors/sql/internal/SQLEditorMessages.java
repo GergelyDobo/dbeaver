@@ -93,6 +93,8 @@ public class SQLEditorMessages extends NLS {
     public static String action_popup_sqleditor_layout_vertical;
     public static String action_popup_sqleditor_layout_detached;
 
+    public static String action_SelectAllFrom_label;
+
     public static String actions_ContentAssistProposal_label;
     public static String actions_ContentAssistProposal_tooltip;
     public static String actions_ContentAssistProposal_description;
