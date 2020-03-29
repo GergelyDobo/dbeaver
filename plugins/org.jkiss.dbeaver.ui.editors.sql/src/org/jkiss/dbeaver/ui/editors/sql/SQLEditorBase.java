@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.*;
+import org.eclipse.jface.text.hyperlink.IHyperlink;
 import org.eclipse.jface.text.rules.FastPartitioner;
 import org.eclipse.jface.text.source.*;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
@@ -50,17 +51,21 @@ import org.jkiss.dbeaver.model.preferences.DBPPreferenceStore;
 import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
 import org.jkiss.dbeaver.model.sql.*;
 import org.jkiss.dbeaver.model.sql.completion.SQLCompletionContext;
+import org.jkiss.dbeaver.model.sql.parser.SQLIdentifierDetector;
 import org.jkiss.dbeaver.model.sql.parser.SQLParserContext;
 import org.jkiss.dbeaver.model.sql.parser.SQLParserPartitions;
 import org.jkiss.dbeaver.model.sql.parser.SQLRuleManager;
 import org.jkiss.dbeaver.model.sql.parser.SQLScriptParser;
+import org.jkiss.dbeaver.model.struct.DBSObjectReference;
 import org.jkiss.dbeaver.runtime.DBWorkbench;
 import org.jkiss.dbeaver.ui.*;
 import org.jkiss.dbeaver.ui.editors.BaseTextEditorCommands;
 import org.jkiss.dbeaver.ui.editors.EditorUtils;
+import org.jkiss.dbeaver.ui.editors.entity.EntityHyperlink;
 import org.jkiss.dbeaver.ui.editors.sql.internal.SQLEditorMessages;
 import org.jkiss.dbeaver.ui.editors.sql.preferences.*;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLCharacterPairMatcher;
+import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLContextInformer;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLEditorCompletionContext;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLPartitionScanner;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLRuleScanner;
@@ -114,6 +119,8 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
     private ICharacterPairMatcher characterPairMatcher;
     private SQLEditorCompletionContext completionContext;
     private SQLOccurrencesHighlighter occurrencesHighlighter;
+
+    private SQLContextInformer contextInformer;
 
     public SQLEditorBase() {
         super();
@@ -499,7 +506,6 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
         action.setActionDefinitionId(BaseTextEditorCommands.CMD_CONTENT_FORMAT);
         setAction(SQLEditorContributor.ACTION_CONTENT_FORMAT_PROPOSAL, action);
 
-        setAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM, new ShowSelectAllFromAction());
         setAction(ITextEditorActionConstants.CONTEXT_PREFERENCES, new ShowPreferencesAction());
 /*
         // Add the task action to the Edit pulldown menu (bookmark action is  'free')
@@ -522,8 +528,13 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
 
         super.editorContextMenuAboutToShow(menu);
 
-        IAction selectAllFromAction = getAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM);
-        menu.insertBefore(GROUP_SQL_ADDITIONS, selectAllFromAction);
+        IHyperlink hyperlink = this.getHyperlink();
+
+        if (hyperlink != null && !CommonUtils.isEmpty(hyperlink.getHyperlinkText())) {
+            setAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM, new ShowSelectAllFromAction(hyperlink));
+            IAction selectAllFromAction = getAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM);
+            menu.insertBefore(GROUP_SQL_ADDITIONS, selectAllFromAction);
+        }
 
         //menu.add(new Separator("content"));//$NON-NLS-1$
         addAction(menu, GROUP_SQL_EXTRAS, SQLEditorContributor.ACTION_CONTENT_ASSIST_PROPOSAL);
@@ -549,6 +560,21 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
 
         //menu.remove(IWorkbenchActionConstants.MB_ADDITIONS);
     }
+
+    private IHyperlink getHyperlink() {
+    	this.contextInformer = new SQLContextInformer(this, this.getSyntaxManager());
+	    ITextSelection selection = (ITextSelection) getTextViewer().getSelection();
+	    IRegion selectionRegion = new Region(selection.getOffset(), selection.getLength());
+	    this.contextInformer.searchInformation(selectionRegion);
+	    SQLIdentifierDetector.WordRegion wordRegion = this.contextInformer.getWordRegion();
+        if (wordRegion != null && !CommonUtils.isEmpty(wordRegion.identifier)) {
+            IRegion tableNameRegion = new Region(wordRegion.identStart, wordRegion.identEnd - wordRegion.identStart);
+            List<DBSObjectReference> references = contextInformer.getObjectReferences();
+            IHyperlink link = new EntityHyperlink(this.getSite(), references.get(0), tableNameRegion);
+            return link;
+        }
+        return null;
+	}
 
     public void reloadSyntaxRules() {
         // Refresh syntax
@@ -832,13 +858,16 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
     }
 
     protected class ShowSelectAllFromAction extends Action {
-    	private String text;
-    	ShowSelectAllFromAction() {
-    		super(SQLEditorMessages.action_SelectAllFrom_label);
+    	private IHyperlink link;
+
+    	ShowSelectAllFromAction(IHyperlink hyperlink) {
+    		super(SQLEditorMessages.action_SelectAllFrom_label + " " + hyperlink.getHyperlinkText());
+    		this.link = hyperlink;
     	}  //$NON-NLS-1$
 
 	    public void run() {
-	        System.out.println("TODO");
+	        System.out.println(this.link.getHyperlinkText());
+	        this.link.open();
 	    }
     }
 }
