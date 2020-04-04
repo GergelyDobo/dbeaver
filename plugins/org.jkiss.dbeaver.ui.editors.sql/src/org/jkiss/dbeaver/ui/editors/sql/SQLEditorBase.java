@@ -861,7 +861,7 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
     	private IHyperlink link;
 
     	ShowSelectAllFromAction(IHyperlink hyperlink) {
-    		super(SQLEditorMessages.action_SelectAllFrom_label + " " + hyperlink.getHyperlinkText());
+    		super(SQLEditorMessages.actions_SelectAllFrom_label + " " + hyperlink.getHyperlinkText());
     		this.link = hyperlink;
     	}  //$NON-NLS-1$
 
