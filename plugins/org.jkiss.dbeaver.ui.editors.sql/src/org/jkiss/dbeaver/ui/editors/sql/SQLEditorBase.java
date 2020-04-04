@@ -528,14 +528,13 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
 
         super.editorContextMenuAboutToShow(menu);
 
-        IHyperlink hyperlink = this.getHyperlink();
-
-        if (hyperlink != null && !CommonUtils.isEmpty(hyperlink.getHyperlinkText())) {
-            setAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM, new ShowSelectAllFromAction(hyperlink));
-            IAction selectAllFromAction = getAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM);
-            menu.insertBefore(GROUP_SQL_ADDITIONS, selectAllFromAction);
+        if (this.hasDataTableIdentifier()) {
+        	String dataTableIdentifier = this.getDataTableIdentifier();
+        	setAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM, new ShowSelectAllFromAction(dataTableIdentifier));
+        	IAction selectAllFromAction = getAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM);
+        	menu.insertBefore(GROUP_SQL_ADDITIONS, selectAllFromAction);
         }
-
+        
         //menu.add(new Separator("content"));//$NON-NLS-1$
         addAction(menu, GROUP_SQL_EXTRAS, SQLEditorContributor.ACTION_CONTENT_ASSIST_PROPOSAL);
         addAction(menu, GROUP_SQL_EXTRAS, SQLEditorContributor.ACTION_CONTENT_ASSIST_TIP);
@@ -561,20 +560,37 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
         //menu.remove(IWorkbenchActionConstants.MB_ADDITIONS);
     }
 
-    private IHyperlink getHyperlink() {
+    public String getDataTableIdentifier() {
     	this.contextInformer = new SQLContextInformer(this, this.getSyntaxManager());
 	    ITextSelection selection = (ITextSelection) getTextViewer().getSelection();
 	    IRegion selectionRegion = new Region(selection.getOffset(), selection.getLength());
 	    this.contextInformer.searchInformation(selectionRegion);
-	    SQLIdentifierDetector.WordRegion wordRegion = this.contextInformer.getWordRegion();
-        if (wordRegion != null && !CommonUtils.isEmpty(wordRegion.identifier)) {
-            IRegion tableNameRegion = new Region(wordRegion.identStart, wordRegion.identEnd - wordRegion.identStart);
-            List<DBSObjectReference> references = contextInformer.getObjectReferences();
-            IHyperlink link = new EntityHyperlink(this.getSite(), references.get(0), tableNameRegion);
-            return link;
+	    SQLIdentifierDetector.WordRegion wordRegion = null;
+	    try {
+		    wordRegion = this.contextInformer.getWordRegion();
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+        if (wordRegion != null) {
+            List<DBSObjectReference> references = this.contextInformer.getObjectReferences();
+            if (references != null) {
+            	String dataTableIdentifier = null;
+            	try {
+            		dataTableIdentifier = DBUtils.getObjectFullName(references.get(0), DBPEvaluationContext.UI);
+            	} catch (Exception e) {
+            		e.printStackTrace();
+        	    }
+            	if (!CommonUtils.isEmpty(dataTableIdentifier)) {
+            		return dataTableIdentifier;
+            	}
+            }
         }
         return null;
 	}
+
+    private boolean hasDataTableIdentifier() {
+    	return !CommonUtils.isEmpty(this.getDataTableIdentifier());
+    }
 
     public void reloadSyntaxRules() {
         // Refresh syntax
@@ -858,16 +874,13 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
     }
 
     protected class ShowSelectAllFromAction extends Action {
-    	private IHyperlink link;
-
-    	ShowSelectAllFromAction(IHyperlink hyperlink) {
-    		super(SQLEditorMessages.actions_SelectAllFrom_label + " " + hyperlink.getHyperlinkText());
-    		this.link = hyperlink;
+    	ShowSelectAllFromAction(String dataTable) {
+    		super(SQLEditorMessages.actions_SelectAllFrom_label + " " + dataTable);
     	}  //$NON-NLS-1$
 
 	    public void run() {
-	        System.out.println(this.link.getHyperlinkText());
-	        this.link.open();
+	       ActionUtils.makeCommandContribution(getSite(), SQLEditorCommands.CMD_SELECT_ALL_FROM);
+	       ActionUtils.runCommand(SQLEditorCommands.CMD_SELECT_ALL_FROM, getSite());
 	    }
     }
 }
