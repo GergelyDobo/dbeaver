@@ -43,6 +43,9 @@ public class SQLEditorHandlerExecute extends AbstractHandler
         }
         String actionId = event.getCommand().getId();
         switch (actionId) {
+        	case SQLEditorCommands.CMD_SELECT_ALL_FROM:
+        		editor.processSQL(true, false);
+	            break;
             case SQLEditorCommands.CMD_EXECUTE_STATEMENT:
                 editor.processSQL(false, false);
                 break;
