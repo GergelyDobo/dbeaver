@@ -211,7 +211,8 @@ public class TextViewDialog extends ValueViewDialog {
 				}
 				
 				@Override
-				public void keyPressed(KeyEvent e) {					
+				public void keyPressed(KeyEvent e) {
+					//DO NOTHING
 				}
 			});
             
@@ -226,7 +227,7 @@ public class TextViewDialog extends ValueViewDialog {
                     item.setControl(jsonEdit);
                     jsonEdit.setText(jsonString);
                 } catch (JsonSyntaxException e) {
-                	
+                	// DO NOTHING
                 }
                 
             }
@@ -381,10 +382,7 @@ public class TextViewDialog extends ValueViewDialog {
     }
     
     private boolean isJsonEditorActive() {
-        if (editorContainer.getItemCount() > 2 && editorContainer.getSelectionIndex() == 1) {
-        	return true;
-        }
-        return false;
+    	return editorContainer.getItemCount() > 2 && editorContainer.getSelectionIndex() == 1;
     }
 
     private void updateValueLength()
