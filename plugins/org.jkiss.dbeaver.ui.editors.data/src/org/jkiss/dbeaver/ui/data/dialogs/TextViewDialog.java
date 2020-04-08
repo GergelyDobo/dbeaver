@@ -73,13 +73,29 @@ public class TextViewDialog extends ValueViewDialog {
     private Control hexEditControl;
     private TabFolder editorContainer;
     private boolean dirty;
-    
-    private JsonParser parser;
-    private Gson gson;
 
     public TextViewDialog(IValueController valueController) {
         super(valueController);
     }
+
+	public static boolean isJSON(String text) {
+		JsonParser parser = new JsonParser();
+		if (text.contains("{") && text.contains("}")) {
+			try {
+				parser.parse(text);
+				return true;
+			} catch (JsonSyntaxException e) {
+				return false;
+			}
+		}
+		return false;
+	}
+
+	public static String parseToJson(String text) {
+		JsonParser parser = new JsonParser();
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		return isJSON(text) ? gson.toJson(parser.parse(text)) : "Not Valid JSON String";		
+	}
 
     @Override
     protected Control createDialogArea(Composite parent)
@@ -159,9 +175,8 @@ public class TextViewDialog extends ValueViewDialog {
         }
         //json
         {
-        	parser = new JsonParser();
-            gson = new GsonBuilder().setPrettyPrinting().create();
-        	String value =  valueType.getTypeName().equals("varchar") ? (String) getValueController().getValue() : null;
+
+			String value = valueType.getTypeName().equals("varchar") ? (String) getValueController().getValue() : null;
         	int style = SWT.NONE;
             if (readOnly) {
                 style |= SWT.READ_ONLY;
@@ -199,44 +214,35 @@ public class TextViewDialog extends ValueViewDialog {
 				
 				@Override
 				public void keyReleased(KeyEvent event) {
-					if (event.keyCode == 'f' && (event.stateMask & SWT.CTRL) != 0 && (event.stateMask & SWT.SHIFT)!= 0 ) {
-						try{
-							String jsonString = gson.toJson(parser.parse(jsonEdit.getText()));
-							jsonEdit.setText(jsonString);
-						} catch (JsonSyntaxException e) {
+					if (event.keyCode == 'f' && (event.stateMask & SWT.CTRL) != 0
+							&& (event.stateMask & SWT.SHIFT) != 0) {
+						if (isJSON(jsonEdit.getText())) {
+							jsonEdit.setText(parseToJson(jsonEdit.getText()));
+						} else {
 							MessageDialog.openWarning(getShell(), "Warning", "Invalid JSON String, cannot be indented");
-							
 						}	
 					}					
 				}
 				
 				@Override
 				public void keyPressed(KeyEvent e) {
-					//DO NOTHING
+					// Not needed to be implemented
 				}
 			});
             
-            
-            if (hexEditorService != null && value != null && value.contains("{") && value.contains("}")) {
-                try {
-                	JsonElement element = parser.parse(value);
-                    String jsonString = gson.toJson(element);
+			if (hexEditorService != null && value != null && isJSON(value)) {
+				// JsonElement element = parser.parse(value);
+				String jsonString = parseToJson(value);
                     TabItem item = new TabItem(editorContainer, SWT.NO_FOCUS);
                     item.setText("Json");
                     item.setImage(DBeaverIcons.getImage(DBIcon.TYPE_JSON));
                     item.setControl(jsonEdit);
                     jsonEdit.setText(jsonString);
-                } catch (JsonSyntaxException e) {
-                	// DO NOTHING
-                }
                 
             }
             
-            
-            
-            
         }
-        //json
+		// json
         
         Point minSize = null;
         if (hexEditorService != null) {
@@ -264,7 +270,6 @@ public class TextViewDialog extends ValueViewDialog {
             hexEditControl.addListener(SWT.Modify, event -> dirty = true);
             updateValueLength();
         }
-        
         
         primeEditorValue(getValueController().getValue());
         
@@ -338,15 +343,8 @@ public class TextViewDialog extends ValueViewDialog {
         } else {
             if (isTextEditorActive()) {
                 rawValue = textEdit.getText();
-            }
-            else if(!isTextEditorActive() && isJsonEditorActive()) {
-                try {
-                	JsonElement element = parser.parse(jsonEdit.getText());
-                    rawValue = element.toString();
-                } catch(JsonSyntaxException e) {
-                    rawValue = jsonEdit.getText();
-                }
-                
+			} else if (!isTextEditorActive() && isJsonEditorActive()) {
+                    rawValue = isJSON(jsonEdit.getText())? parseToJson(jsonEdit.getText()) : jsonEdit.getText();
             } else {
                 rawValue = getBinaryString();
             }
@@ -443,15 +441,12 @@ public class TextViewDialog extends ValueViewDialog {
             ContentEditor editor = ContentEditor.openEditor(getValueController());
             cancelPressed();
             return;
-        }else if (buttonId == 0 && isJsonEditorActive()) {
-        	try {
-        		parser.parse(jsonEdit.getText());
-        	} catch(JsonSyntaxException e ) {
-        		boolean ok = MessageDialog.openConfirm(getShell(), "Save", "The JSON String is invalid. Are you sure?");
-            	if(!ok) {
+		} else if (buttonId == 0 && isJsonEditorActive()) {
+			if (!isJSON(jsonEdit.getText()) && !MessageDialog.openConfirm(getShell(),
+					"Save", "The JSON String is invalid. Are you sure?")) {
             		return;
             	}
-        	}
+
         }
         super.buttonPressed(buttonId);
     }
