@@ -49,9 +49,10 @@ public class CustomCompositeElementHandler extends CSSPropertyBackgroundSWTHandl
             if (newColor != null) {
                 applyCustomBackground(element, newColor);
             }
-        } else {
-            super.applyCSSPropertyBackgroundColor(element, value, pseudo, engine);
-        }
+        } 
+//        else {
+//            super.applyCSSPropertyBackgroundColor(element, value, pseudo, engine);
+//        }
     }
 
     protected void applyCustomBackground(Object element, Color newColor) {
