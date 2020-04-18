@@ -17,8 +17,11 @@
 package org.jkiss.dbeaver.ui.data.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -51,6 +54,8 @@ import org.jkiss.dbeaver.utils.GeneralUtils;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
+import com.google.gson.*;
+
 /**
  * TextViewDialog
  */
@@ -62,6 +67,7 @@ public class TextViewDialog extends ValueViewDialog {
     private static final String VALUE_TYPE_SELECTOR = "string.value.type";
 
     private StyledText textEdit;
+    private StyledText jsonEdit;
     private Label lengthLabel;
     private IHexEditorService hexEditorService;
     private Control hexEditControl;
@@ -72,14 +78,33 @@ public class TextViewDialog extends ValueViewDialog {
         super(valueController);
     }
 
+	public static boolean isJSON(String text) {
+		JsonParser parser = new JsonParser();
+		if (text.contains("{") && text.contains("}")) {
+			try {
+				parser.parse(text);
+				return true;
+			} catch (JsonSyntaxException e) {
+				return false;
+			}
+		}
+		return false;
+	}
+
+	public static String parseToJson(String text) {
+		JsonParser parser = new JsonParser();
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		return isJSON(text) ? gson.toJson(parser.parse(text)) : "Not Valid JSON String";		
+	}
+
     @Override
     protected Control createDialogArea(Composite parent)
     {
         Composite dialogGroup = (Composite)super.createDialogArea(parent);
-
+        
         ReferenceValueEditor referenceValueEditor = new ReferenceValueEditor(getValueController(), this);
         boolean isForeignKey = referenceValueEditor.isReferenceValue();
-
+        
         Label label = new Label(dialogGroup, SWT.NONE);
         label.setText(ResultSetMessages.dialog_data_label_value);
 
@@ -98,7 +123,7 @@ public class TextViewDialog extends ValueViewDialog {
             lengthLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             //editorContainer.setTopRight(lengthLabel, SWT.FILL);
         }
-
+        
         int selectedType = 0;
         if (getDialogSettings().get(VALUE_TYPE_SELECTOR) != null) {
             selectedType = getDialogSettings().getInt(VALUE_TYPE_SELECTOR);
@@ -108,6 +133,7 @@ public class TextViewDialog extends ValueViewDialog {
             if (readOnly) {
                 style |= SWT.READ_ONLY;
             }
+            
             if (hexEditorService != null) {
                 style |= SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP;
             } else {
@@ -123,6 +149,7 @@ public class TextViewDialog extends ValueViewDialog {
             if (readOnly) {
                 //textEdit.setBackground(getShell().getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
             }
+            
             GridData gd = new GridData(isForeignKey ? GridData.FILL_HORIZONTAL : GridData.FILL_BOTH);
             gd.widthHint = 300;
             if (!isForeignKey) {
@@ -144,11 +171,83 @@ public class TextViewDialog extends ValueViewDialog {
                 item.setImage(DBeaverIcons.getImage(DBIcon.TYPE_TEXT));
                 item.setControl(textEdit);
             }
+            
         }
+        //json
+        {
+
+			String value = valueType.getTypeName().equals("varchar") ? (String) getValueController().getValue() : null;
+        	int style = SWT.NONE;
+            if (readOnly) {
+                style |= SWT.READ_ONLY;
+            }
+            
+            if (hexEditorService != null) {
+                style |= SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP;
+            } else {
+                // Use border only for plain text editor, otherwise tab folder's border will be used
+                style |= SWT.BORDER;
+            }
+            
+            jsonEdit = new StyledText(hexEditorService != null ? editorContainer : dialogGroup, style);
+            jsonEdit.setFont(UIUtils.getMonospaceFont());
+            jsonEdit.setMargins(3, 3, 3, 3);
+            if (maxSize > 0 && valueType.getDataKind() == DBPDataKind.STRING) {
+            	jsonEdit.setTextLimit((int) maxSize);
+            }
+            
+            GridData gd = new GridData(isForeignKey ? GridData.FILL_HORIZONTAL : GridData.FILL_BOTH);
+            gd.widthHint = 300;
+            if (!isForeignKey) {
+                gd.heightHint = 200;
+                gd.grabExcessVerticalSpace = true;
+            }
+            jsonEdit.setLayoutData(gd);
+            jsonEdit.setFocus();
+            jsonEdit.setEditable(!readOnly);
+            jsonEdit.addModifyListener(e -> {
+                dirty = true;
+                updateValueLength();
+            });
+            StyledTextUtils.fillDefaultStyledTextContextMenu(jsonEdit);
+            jsonEdit.addKeyListener(new KeyListener() {
+				
+				@Override
+				public void keyReleased(KeyEvent event) {
+					if (event.keyCode == 'f' && (event.stateMask & SWT.CTRL) != 0
+							&& (event.stateMask & SWT.SHIFT) != 0) {
+						if (isJSON(jsonEdit.getText())) {
+							jsonEdit.setText(parseToJson(jsonEdit.getText()));
+						} else {
+							MessageDialog.openWarning(getShell(), "Warning", "Invalid JSON String, cannot be indented");
+						}	
+					}					
+				}
+				
+				@Override
+				public void keyPressed(KeyEvent e) {
+					// Not needed to be implemented
+				}
+			});
+            
+			if (hexEditorService != null && value != null && isJSON(value)) {
+				// JsonElement element = parser.parse(value);
+				String jsonString = parseToJson(value);
+                    TabItem item = new TabItem(editorContainer, SWT.NO_FOCUS);
+                    item.setText("Json");
+                    item.setImage(DBeaverIcons.getImage(DBIcon.TYPE_JSON));
+                    item.setControl(jsonEdit);
+                    jsonEdit.setText(jsonString);
+                
+            }
+            
+        }
+		// json
+        
         Point minSize = null;
         if (hexEditorService != null) {
             hexEditControl = hexEditorService.createHexControl(editorContainer, readOnly);
-
+            
             minSize = hexEditControl.computeSize(SWT.DEFAULT, SWT.DEFAULT);
             minSize.x += 50;
             minSize.y += 50;
@@ -156,7 +255,7 @@ public class TextViewDialog extends ValueViewDialog {
             item.setText("Hex");
             item.setImage(DBeaverIcons.getImage(DBIcon.TYPE_BINARY));
             item.setControl(hexEditControl);
-
+            
             if (selectedType >= editorContainer.getItemCount()) {
                 selectedType = 0;
             }
@@ -171,9 +270,9 @@ public class TextViewDialog extends ValueViewDialog {
             hexEditControl.addListener(SWT.Modify, event -> dirty = true);
             updateValueLength();
         }
-
+        
         primeEditorValue(getValueController().getValue());
-
+        
         if (isForeignKey) {
             referenceValueEditor.createEditorSelector(dialogGroup);
         }
@@ -182,7 +281,7 @@ public class TextViewDialog extends ValueViewDialog {
             // Set default size as minimum
             getShell().setMinimumSize(minSize);
         }
-
+        
         return dialogGroup;
     }
 
@@ -244,6 +343,8 @@ public class TextViewDialog extends ValueViewDialog {
         } else {
             if (isTextEditorActive()) {
                 rawValue = textEdit.getText();
+			} else if (!isTextEditorActive() && isJsonEditorActive()) {
+                    rawValue = isJSON(jsonEdit.getText())? parseToJson(jsonEdit.getText()) : jsonEdit.getText();
             } else {
                 rawValue = getBinaryString();
             }
@@ -276,6 +377,10 @@ public class TextViewDialog extends ValueViewDialog {
     private boolean isTextEditorActive()
     {
         return editorContainer == null || editorContainer.getSelectionIndex() == 0;
+    }
+    
+    private boolean isJsonEditorActive() {
+    	return editorContainer.getItemCount() > 2 && editorContainer.getSelectionIndex() == 1;
     }
 
     private void updateValueLength()
@@ -336,6 +441,12 @@ public class TextViewDialog extends ValueViewDialog {
             ContentEditor editor = ContentEditor.openEditor(getValueController());
             cancelPressed();
             return;
+		} else if (buttonId == 0 && isJsonEditorActive()) {
+			if (!isJSON(jsonEdit.getText()) && !MessageDialog.openConfirm(getShell(),
+					"Save", "The JSON String is invalid. Are you sure?")) {
+            		return;
+            	}
+
         }
         super.buttonPressed(buttonId);
     }
