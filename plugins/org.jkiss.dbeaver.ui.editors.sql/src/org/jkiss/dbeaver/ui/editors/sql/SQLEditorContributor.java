@@ -41,6 +41,7 @@ public class SQLEditorContributor extends TextEditorActionContributor
 {
     private static final Log log = Log.getLog(SQLEditorContributor.class);
 
+    static final String ACTION_SELECT_ALL_FROM = "SelectAllFrom"; //$NON-NLS-1$
     static final String ACTION_CONTENT_ASSIST_PROPOSAL = "ContentAssistProposal"; //$NON-NLS-1$
     static final String ACTION_CONTENT_ASSIST_TIP = "ContentAssistTip"; //$NON-NLS-1$
     static final String ACTION_CONTENT_ASSIST_INFORMATION = "ContentAssistInfo"; //$NON-NLS-1$
