@@ -87,11 +87,13 @@ public class DBeaverUI implements DBPPlatformUI {
     private TrayIconHandler trayItem;
     private final List<IDisposable> globalDisposables = new ArrayList<>();
     private WorkbenchContextListener contextListener;
-
+    
     public static DBeaverUI getInstance() {
+    	
         if (instance == null) {
             instance = new DBeaverUI();
             instance.initialize();
+           
         }
         return instance;
     }
