@@ -25,6 +25,9 @@ public class NavigatorCommands {
     public static final String GROUP_TOOLS_END = "tools_end";
     public static final String GROUP_NAVIGATOR_ADDITIONS = "navigator_additions";
     public static final String GROUP_NAVIGATOR_ADDITIONS_END = "navigator_additions_end";
+ 
+    // public static final String EDIT_PROCEDURE = "edit_procedure";
+    // public static final String EDIT_PROCEDURE_END = "edit_procedure_end";
 
     public static final String CMD_OBJECT_OPEN = "org.jkiss.dbeaver.core.object.open"; //$NON-NLS-1$
     public static final String CMD_OBJECT_CREATE = "org.jkiss.dbeaver.core.object.create"; //$NON-NLS-1$

@@ -52,6 +52,7 @@ import org.jkiss.dbeaver.ui.controls.ViewerColumnController;
 import org.jkiss.dbeaver.ui.dnd.DatabaseObjectTransfer;
 import org.jkiss.dbeaver.ui.dnd.TreeNodeTransfer;
 import org.jkiss.dbeaver.ui.editors.MultiPageDatabaseEditor;
+import org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerEditProcdure;
 import org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerObjectOpen;
 import org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerRefresh;
 import org.jkiss.dbeaver.ui.navigator.database.DatabaseNavigatorView;
@@ -194,12 +195,14 @@ public class NavigatorUtils {
                 addSetDefaultObjectAction(workbenchSite, manager, selectedNode);
             }
 
-            manager.add(new GroupMarker(NavigatorCommands.GROUP_NAVIGATOR_ADDITIONS));
+           manager.add(new GroupMarker(NavigatorCommands.GROUP_NAVIGATOR_ADDITIONS));
 
-            manager.add(new GroupMarker(NavigatorCommands.GROUP_TOOLS));
+           manager.add(new GroupMarker(NavigatorCommands.GROUP_TOOLS));
             manager.add(new GroupMarker(NavigatorCommands.GROUP_TOOLS_END));
 
-            manager.add(new GroupMarker(NavigatorCommands.GROUP_NAVIGATOR_ADDITIONS_END));
+           manager.add(new GroupMarker(NavigatorCommands.GROUP_NAVIGATOR_ADDITIONS_END));
+           // manager.add(new GroupMarker(NavigatorCommands.EDIT_PROCEDURE));
+           // manager.add(new GroupMarker(NavigatorCommands.EDIT_PROCEDURE_END));
             manager.add(new GroupMarker(IActionConstants.MB_ADDITIONS_END));
 
             if (selectedNode != null && !selectedNode.isLocked() && workbenchSite != null) {
@@ -578,6 +581,25 @@ public class NavigatorUtils {
             Object activePage = parameters == null ? null : parameters.get(MultiPageDatabaseEditor.PARAMETER_ACTIVE_PAGE);
             NavigatorHandlerObjectOpen.openEntityEditor(
                 (DBNNode) node,
+                CommonUtils.toString(activePage, null),
+                window);
+        }
+    }
+    
+    public static void editNavigatorNode(Object node, IWorkbenchWindow window) {
+        editNavigatorNode(node, window, null);
+    }
+    
+    public static void editNavigatorNode(Object node, IWorkbenchWindow window, Map<?, ?> parameters) {
+        if (node instanceof DBNResource) {
+            UIServiceSQL serviceSQL = DBWorkbench.getService(UIServiceSQL.class);
+            if (serviceSQL != null) {
+                serviceSQL.openResource(((DBNResource) node).getResource());
+            }
+        } else if (node instanceof DBNNode && ((DBNNode) node).allowsOpen()) {
+            Object activePage = parameters == null ? null : parameters.get(MultiPageDatabaseEditor.PARAMETER_ACTIVE_PAGE);
+            NavigatorHandlerEditProcdure.openEntityEditor(
+            	(DBNNode) node,
                 CommonUtils.toString(activePage, null),
                 window);
         }

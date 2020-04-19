@@ -255,10 +255,19 @@
         <command id="org.jkiss.dbeaver.ui.tools.select.schema" name="%command.org.jkiss.dbeaver.ui.tools.select.schema.name" description="%command.org.jkiss.dbeaver.ui.tools.select.schema.description" categoryId="org.jkiss.dbeaver.core.database">
             <commandParameter id="noCustomLabel" name="Show original command name" optional="true"/>
         </command>
+        <command
+              categoryId="org.jkiss.dbeaver.core.navigator"
+              defaultHandler="org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerEditProcdure"
+              description="%command.org.jkiss.dbeaver.ui.navigator.edit.procedure.description"
+              id="org.jkiss.dbeaver.ui.navigator.edit.procedure"
+              name="%command.org.jkiss.dbeaver.ui.navigator.edit.procedure.name">
+        </command>
+        
     </extension>
 
     <extension point="org.eclipse.ui.commandImages">
         <image commandId="org.jkiss.dbeaver.core.object.open" icon="platform:/plugin/org.jkiss.dbeaver.ui/icons/edit.png"/>
+        <image commandId="org.jkiss.dbeaver.ui.navigator.edit.procedure" icon="platform:/plugin/org.jkiss.dbeaver.ui/icons/dbeaver_logo_small.png"/>
         <image commandId="org.jkiss.dbeaver.core.object.create" icon="platform:/plugin/org.jkiss.dbeaver.ui/icons/create.png"/>
         <image commandId="org.jkiss.dbeaver.core.object.delete" icon="platform:/plugin/org.jkiss.dbeaver.ui/icons/delete.png"/>
         <image commandId="org.jkiss.dbeaver.core.object.move.up" icon="platform:/plugin/org.jkiss.dbeaver.ui/icons/misc/arrow_up.png"/>
@@ -290,6 +299,17 @@
 
         <handler commandId="org.jkiss.dbeaver.core.object.open" class="org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerObjectOpen">
             <enabledWhen>
+                <with variable="selection">
+                    <count value="+"/>
+                    <iterate operator="and">
+                        <instanceof value="org.jkiss.dbeaver.model.navigator.DBNNode"/>
+                    </iterate>
+                </with>
+            </enabledWhen>
+        </handler>
+        
+        <handler commandId="org.jkiss.dbeaver.ui.navigator.edit.procedure" class="org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerObjectOpen">
+		<enabledWhen>
                 <with variable="selection">
                     <count value="+"/>
                     <iterate operator="and">
@@ -737,6 +757,32 @@
             </toolbar>
         </menuContribution>
 
+		<menuContribution allPopups="false" locationURI="popup:org.eclipse.ui.popup.any?after=create">
+            <command commandId="org.jkiss.dbeaver.ui.navigator.edit.procedure">
+                <visibleWhen>
+                    <with variable="selection">
+                        <count value="1"/>
+                        <iterate operator="and">
+                            <test property="org.jkiss.dbeaver.core.object.canCreateSingle"/>
+                        </iterate>
+                    </with>
+                </visibleWhen>
+            </command>
+            
+            
+            <menu id="dbeaver-edit-procedure" label="%menu.edit.procedure.label">
+                <visibleWhen>
+                    <with variable="selection">
+                        <count value="1"/>
+                        <iterate operator="and">
+                            <test property="org.jkiss.dbeaver.core.object.canCreateMulti"/>
+                        </iterate>
+                    </with>
+                </visibleWhen>
+                <dynamic id="org.jkiss.dbeaver.core.menu.edit.procedure" class="org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerEditProcedureNew$MenuCreateContributor"/>
+            </menu>
+       	 </menuContribution>
+       	 
         <menuContribution allPopups="false" locationURI="popup:org.eclipse.ui.popup.any?after=create">
             <command commandId="org.jkiss.dbeaver.core.object.create">
                 <visibleWhen>
@@ -748,6 +794,8 @@
                     </with>
                 </visibleWhen>
             </command>
+            
+            
             <menu id="dbeaver-menu-create" label="%menu.create.label">
                 <visibleWhen>
                     <with variable="selection">
@@ -759,7 +807,9 @@
                 </visibleWhen>
                 <dynamic id="org.jkiss.dbeaver.core.menu.create" class="org.jkiss.dbeaver.ui.navigator.actions.NavigatorHandlerObjectCreateNew$MenuCreateContributor"/>
             </menu>
-        </menuContribution>
+       	 </menuContribution>
+       	 
+       	 
 
     </extension>
 
