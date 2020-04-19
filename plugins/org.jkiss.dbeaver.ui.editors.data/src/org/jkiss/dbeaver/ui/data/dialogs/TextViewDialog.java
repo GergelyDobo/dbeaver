@@ -344,7 +344,9 @@ public class TextViewDialog extends ValueViewDialog {
             if (isTextEditorActive()) {
                 rawValue = textEdit.getText();
 			} else if (!isTextEditorActive() && isJsonEditorActive()) {
-                    rawValue = isJSON(jsonEdit.getText())? parseToJson(jsonEdit.getText()) : jsonEdit.getText();
+                    rawValue = isJSON(jsonEdit.getText())
+                    		? new JsonParser().parse(jsonEdit.getText()).toString()
+                    		: jsonEdit.getText();
             } else {
                 rawValue = getBinaryString();
             }
