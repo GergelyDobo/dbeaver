@@ -2,6 +2,7 @@ package org.jkiss.dbeaver.ui.data.dialogs;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class TextViewDialogTest {
