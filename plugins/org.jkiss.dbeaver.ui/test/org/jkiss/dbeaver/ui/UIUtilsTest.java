@@ -55,16 +55,6 @@ class UIUtilsTest {
 		assertEquals(color, result);
 	}
 	
-	//Rossz valamiért
-//	@Test()
-//	void testgetSharedColorWithInvalid() {
-//		RGB rgb = new RGB(250,-250,250);
-//		IllegalArgumentException e = assertThrows(IllegalArgumentException.class , () -> UIUtils.getSharedColor(rgb));
-//		//String expected = "Argument not valid";
-//		IllegalArgumentException ex = new IllegalArgumentException("Argument not valid");
-//		assertEquals(ex.getMessage() , e.getMessage());
-//	}
-	
 	@Test
 	void testgreyLevelEqual() {
 		RGB rgb = new RGB(250,250,250);
