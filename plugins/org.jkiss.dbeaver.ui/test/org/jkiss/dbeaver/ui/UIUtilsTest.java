@@ -33,8 +33,8 @@ class UIUtilsTest {
 	@Test
 	void testGetColorByRGBWithInvalid() {
 		String rgbString = "254,254,-254";
-		DataFormatException e = assertThrows(DataFormatException.class , () -> UIUtils.getColorByRGB(rgbString));
 		String expected = "Argument not valid";
+		DataFormatException e = assertThrows(DataFormatException.class , () -> UIUtils.getColorByRGB(rgbString));
 		assertEquals(expected , e.getMessage());
 	}
 	
