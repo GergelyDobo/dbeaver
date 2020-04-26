@@ -22,9 +22,16 @@ A DBeaver rendelkezik többek között:
 
 ## Teljesítések és leadandók
 1. Projekt megismerése és változtatási igények összeállítása
+	* A választott projekt leírása
+	* A választott projekt bemutatása
+	* Változtatási igény ismertetése és felosztása
 2. Fejlesztés és tesztelés
     * Változtatási igény implementálása
+		* A változtatásokat tartalmazó projekt forráskódja
+		* A változtatások megvalósításának bemutatása
     * Unit tesztek
+		* Tesztelési jegyzőkönyv és lefedettségi jelentés
+		* Unit tesztek forráskódja
 3. Minőségbiztosítás és elemzés
     * Minőségriport statikus kódelemzés alapján
     * Szoftver vizualizáció
