@@ -1,0 +1,21 @@
+Csak a miénk
+gource -f -1920x1080 --start-date "2020-03-02" --seconds-per-day 1 
+
+egész gyorsítva:
+gource -f -1920x1080 --seconds-per-day 0.01 --hide dirnames,filenames
+
+Honlap:
+https://gource.io/
+Github:
+https://github.com/acaudwell/Gource
+
+Videók készítése:
+elérhető: https://drive.google.com/open?id=1UBArxnjzcWwG8-Lc8-DceX60rj15s8su
+
+egész:
+gource -f -1440x900 --stop-position 1.0 --highlight-all-users --hide dirnames,filenames,mouse,progress --seconds-per-day 0.05 --output-framerate 60 --output-ppm-stream output.ppm
+ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i output.ppm  -vcodec libx264 -r 60 -qscale 0 out.mp4
+
+rövid:
+gource -f -1920x1080 --start-date "2020-03-02" --seconds-per-day 0.8 --highlight-all-users --output-framerate 60 --output-ppm-stream short.ppm
+ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i short.ppm  -vcodec libx264 -r 60 -qscale 0 short.mp4
