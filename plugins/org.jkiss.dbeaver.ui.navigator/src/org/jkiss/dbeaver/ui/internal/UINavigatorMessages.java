@@ -71,6 +71,7 @@ public class UINavigatorMessages extends NLS {
     public static String actions_navigator_view_script_button;
     public static String actions_navigator_filter_objects;
     public static String actions_navigator_search_tip;
+   // public static String actions_navigator_edit_procedure;
 
     public static String dialog_project_create_wizard_error_already_exists;
     public static String dialog_project_create_wizard_error_cannot_create;
@@ -191,6 +192,8 @@ public class UINavigatorMessages extends NLS {
     public static String label_choose_catalog;
     public static String label_error_list;
     public static String label_instance;
+
+	public static String actions_navigator_edit_procedure;
 
     static {
         // initialize resource bundle
