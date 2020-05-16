@@ -24,7 +24,9 @@ import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.impl.sql.SQLQueryTransformerAllRows;
 import org.jkiss.dbeaver.model.impl.sql.SQLQueryTransformerCount;
 import org.jkiss.dbeaver.model.impl.sql.SQLQueryTransformerExpression;
+import org.jkiss.dbeaver.model.impl.sql.SQLQueryTransformerSelectAllFrom;
 import org.jkiss.dbeaver.ui.editors.sql.SQLEditor;
+import org.jkiss.dbeaver.ui.editors.sql.SQLEditorBase;
 import org.jkiss.dbeaver.ui.editors.sql.SQLEditorCommands;
 import org.jkiss.dbeaver.utils.RuntimeUtils;
 
@@ -37,12 +39,17 @@ public class SQLEditorHandlerExecute extends AbstractHandler
     public Object execute(ExecutionEvent event) throws ExecutionException
     {
         SQLEditor editor = RuntimeUtils.getObjectAdapter(HandlerUtil.getActiveEditor(event), SQLEditor.class);
+        SQLEditorBase editorBase = RuntimeUtils.getObjectAdapter(HandlerUtil.getActiveEditor(event), SQLEditorBase.class);
         if (editor == null) {
             log.error("No active SQL editor found");
             return null;
         }
         String actionId = event.getCommand().getId();
         switch (actionId) {
+        	case SQLEditorCommands.CMD_SELECT_ALL_FROM:
+        		String dataTableIdentifier = editorBase.getDataTableIdentifier();
+        		editor.processSQL(true, false, new SQLQueryTransformerSelectAllFrom(dataTableIdentifier), null);
+	            break;
             case SQLEditorCommands.CMD_EXECUTE_STATEMENT:
                 editor.processSQL(false, false);
                 break;
