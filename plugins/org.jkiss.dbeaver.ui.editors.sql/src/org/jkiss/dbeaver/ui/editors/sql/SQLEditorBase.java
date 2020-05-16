@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.*;
+import org.eclipse.jface.text.hyperlink.IHyperlink;
 import org.eclipse.jface.text.rules.FastPartitioner;
 import org.eclipse.jface.text.source.*;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
@@ -50,17 +51,21 @@ import org.jkiss.dbeaver.model.preferences.DBPPreferenceStore;
 import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
 import org.jkiss.dbeaver.model.sql.*;
 import org.jkiss.dbeaver.model.sql.completion.SQLCompletionContext;
+import org.jkiss.dbeaver.model.sql.parser.SQLIdentifierDetector;
 import org.jkiss.dbeaver.model.sql.parser.SQLParserContext;
 import org.jkiss.dbeaver.model.sql.parser.SQLParserPartitions;
 import org.jkiss.dbeaver.model.sql.parser.SQLRuleManager;
 import org.jkiss.dbeaver.model.sql.parser.SQLScriptParser;
+import org.jkiss.dbeaver.model.struct.DBSObjectReference;
 import org.jkiss.dbeaver.runtime.DBWorkbench;
 import org.jkiss.dbeaver.ui.*;
 import org.jkiss.dbeaver.ui.editors.BaseTextEditorCommands;
 import org.jkiss.dbeaver.ui.editors.EditorUtils;
+import org.jkiss.dbeaver.ui.editors.entity.EntityHyperlink;
 import org.jkiss.dbeaver.ui.editors.sql.internal.SQLEditorMessages;
 import org.jkiss.dbeaver.ui.editors.sql.preferences.*;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLCharacterPairMatcher;
+import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLContextInformer;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLEditorCompletionContext;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLPartitionScanner;
 import org.jkiss.dbeaver.ui.editors.sql.syntax.SQLRuleScanner;
@@ -114,6 +119,8 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
     private ICharacterPairMatcher characterPairMatcher;
     private SQLEditorCompletionContext completionContext;
     private SQLOccurrencesHighlighter occurrencesHighlighter;
+
+    private SQLContextInformer contextInformer;
 
     public SQLEditorBase() {
         super();
@@ -521,6 +528,13 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
 
         super.editorContextMenuAboutToShow(menu);
 
+        if (this.hasDataTableIdentifier()) {
+        	String dataTableIdentifier = this.getDataTableIdentifier();
+        	setAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM, new ShowSelectAllFromAction(dataTableIdentifier));
+        	IAction selectAllFromAction = getAction(SQLEditorContributor.ACTION_SELECT_ALL_FROM);
+        	menu.insertBefore(GROUP_SQL_ADDITIONS, selectAllFromAction);
+        }
+        
         //menu.add(new Separator("content"));//$NON-NLS-1$
         addAction(menu, GROUP_SQL_EXTRAS, SQLEditorContributor.ACTION_CONTENT_ASSIST_PROPOSAL);
         addAction(menu, GROUP_SQL_EXTRAS, SQLEditorContributor.ACTION_CONTENT_ASSIST_TIP);
@@ -544,6 +558,38 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
         }
 
         //menu.remove(IWorkbenchActionConstants.MB_ADDITIONS);
+    }
+
+    public String getDataTableIdentifier() {
+    	this.contextInformer = new SQLContextInformer(this, this.getSyntaxManager());
+	    ITextSelection selection = (ITextSelection) getTextViewer().getSelection();
+	    IRegion selectionRegion = new Region(selection.getOffset(), selection.getLength());
+	    this.contextInformer.searchInformation(selectionRegion);
+	    SQLIdentifierDetector.WordRegion wordRegion = null;
+	    try {
+		    wordRegion = this.contextInformer.getWordRegion();
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+        if (wordRegion != null) {
+            List<DBSObjectReference> references = this.contextInformer.getObjectReferences();
+            if (references != null) {
+            	String dataTableIdentifier = null;
+            	try {
+            		dataTableIdentifier = DBUtils.getObjectFullName(references.get(0), DBPEvaluationContext.UI);
+            	} catch (Exception e) {
+            		e.printStackTrace();
+        	    }
+            	if (!CommonUtils.isEmpty(dataTableIdentifier)) {
+            		return dataTableIdentifier;
+            	}
+            }
+        }
+        return null;
+	}
+
+    private boolean hasDataTableIdentifier() {
+    	return !CommonUtils.isEmpty(this.getDataTableIdentifier());
     }
 
     public void reloadSyntaxRules() {
@@ -827,4 +873,14 @@ public abstract class SQLEditorBase extends BaseTextEditor implements DBPContext
         }
     }
 
+    protected class ShowSelectAllFromAction extends Action {
+    	ShowSelectAllFromAction(String dataTable) {
+    		super(SQLEditorMessages.actions_SelectAllFrom_label + " " + dataTable);
+    	}  //$NON-NLS-1$
+
+	    public void run() {
+	       ActionUtils.makeCommandContribution(getSite(), SQLEditorCommands.CMD_SELECT_ALL_FROM);
+	       ActionUtils.runCommand(SQLEditorCommands.CMD_SELECT_ALL_FROM, getSite());
+	    }
+    }
 }
